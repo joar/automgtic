@@ -25,8 +25,13 @@ if __name__ == '__main__':
             const=True,
             action='store_const',
             help='Run the autouploader')
+    parser.add_argument(
+            '--level',
+            help='Logging level, one of [ CRITICAL | ERROR | WARNING | INFO | DEBUG ], default: INFO')
 
     args = parser.parse_args()
+
+    root_log.setLevel(getattr(logging, args.level or 'INFO'))
 
     root_log.debug(args)
 

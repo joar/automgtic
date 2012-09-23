@@ -37,6 +37,7 @@ def load_config():
             interpolation='ConfigParser')
 
     validator = Validator()
+    # TODO: Add validation error handling
     validation_result = config.validate(validator, preserve_errors=True)
 
     app_config = config['automgtic']
@@ -51,18 +52,37 @@ _log.debug(config)
 def walk_files(directory):
     for root, directories, files in os.walk(directory):
         for f in files:
-            yield os.path.join(root, f)
+            path = os.path.join(root, f)
+
+            if not os.path.isfile(path):
+                continue
+
+            file_extension = os.path.splitext(path)[-1][1:]
+            _log.debug('file extension: {0}'.format(file_extension))
+
+            if file_extension and \
+                    file_extension.lower() in app_config.get('file_extensions'):
+                yield path
 
 
 def upload_if_not_exist(path, digest):
     media = Media.query.filter(Media.digest == unicode(digest)).first()
 
     if media:
-        _log.debug('Contents of {0} already exist on the server'.format(path))
+        _log.info('Contents of {0} already exist on the server as {1}'.format(
+            path,
+            media.name))
         return
 
     _log.info('Uploading {0}...'.format(path))
-    datagen, headers = multipart_encode({'file': open(path, 'rb')})
+    fields = {
+            'file': open(path, 'rb'),
+            'title': os.path.split(path)[-1],
+            'description': '',
+            'license': '',
+            'tags': ''}
+
+    datagen, headers = multipart_encode(fields)
 
     request = Request(mg_config['server'] + '/api/submit?access_token=' \
             + mg_config['access_token'],
