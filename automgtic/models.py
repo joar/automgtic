@@ -14,26 +14,6 @@ class AutomgticBase(object):
 Base = declarative_base(cls=AutomgticBase)
 
 
-class Config(Base):
-    # TODO: Use a configuration file for the config
-    __tablename__ = 'core__config'
-
-    id = Column(Integer, primary_key=True)
-    key = Column(Unicode, index=True, unique=True)
-    value = Column(Unicode, index=True)
-
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
-    def __repr__(self):
-        return '<{0} {1}: {2} = {3}>'.format(
-                self.__class__.__name__,
-                self.id,
-                self.key.decode('ascii', 'replace'),
-                self.value.decode('ascii', 'replace'))
-
-
 class Media(Base):
     __tablename__ = 'core__media'
 
