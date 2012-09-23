@@ -4,3 +4,5 @@
 /lib
 /local
 .py[co]
+/automgtic_local.ini
+*.egg-info

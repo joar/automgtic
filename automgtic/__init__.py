@@ -1,25 +1,123 @@
-from urllib2 import urlopen
+import logging
+import os
+import hashlib
+import json
 
+from urllib2 import urlopen, Request
+
+from poster.streaminghttp import register_openers
+from poster.encode import multipart_encode
 from oauthlib.oauth2.draft25 import WebApplicationClient
-from automgtic.models import Config, session
+from configobj import ConfigObj
+from validate import Validator
+
+from automgtic.models import Media, session
+
+register_openers()
+
+_log = logging.getLogger(__name__)
+
+config = app_config = mg_config = {}
 
 
-def set_client_id(client_id):
-    client_id = client_id or raw_input('Client identifier: ')
-    set_config('client_id', client_id)
+def load_config():
+    global config, app_config, mg_config
+
+    configspec = ConfigObj('automgtic/config_spec.ini',
+            list_values=False,
+            _inspec=True)
+
+    if os.path.exists('automgtic_local.ini'):
+        config_path = 'automgtic_local.ini'
+    else:
+        config_path = 'automgtic.ini'
+
+    config = ConfigObj(config_path,
+            configspec=configspec,
+            interpolation='ConfigParser')
+
+    validator = Validator()
+    validation_result = config.validate(validator, preserve_errors=True)
+
+    app_config = config['automgtic']
+    mg_config = config['mediagoblin']
+
+
+load_config()
+
+_log.debug(config)
+
+
+def walk_files(directory):
+    for root, directories, files in os.walk(directory):
+        for f in files:
+            yield os.path.join(root, f)
+
+
+def upload_if_not_exist(path, digest):
+    media = Media.query.filter(Media.digest == unicode(digest)).first()
+
+    if media:
+        _log.debug('Contents of {0} already exist on the server'.format(path))
+        return
+
+    _log.info('Uploading {0}...'.format(path))
+    datagen, headers = multipart_encode({'file': open(path, 'rb')})
+
+    request = Request(mg_config['server'] + '/api/submit?access_token=' \
+            + mg_config['access_token'],
+            datagen, headers)
+
+    response = urlopen(request).read()
+    _log.info('Posted {0}'.format(path))
+    _log.debug('response: {0}'.format(response))
+
+    media_data = json.loads(response)
+    _log.debug('media data: {0}'.format(media_data))
+
+    media = Media(digest, os.path.split(path)[-1], json.dumps(media_data))
+
+    session.add(media)
+    session.commit()
+
+
+def run_autoupload(directory):
+    for path in walk_files(directory):
+        digest = digest_file(path)
+        _log.debug('{0} - sum: {1}'.format(
+            path,
+            digest))
+        upload_if_not_exist(path, digest)
+
+
+def digest_file(f, block_size=2 ** 20):
+    md5 = hashlib.md5()
+
+    if type(f) in [str, unicode]:
+        f = open(f, 'rb')
+
+    while True:
+        block = f.read(block_size)
+
+        if not block:
+            break
+
+        md5.update(block)
+
+    return md5.hexdigest()
 
 
 def authorize():
     client = get_client()
     uri = client.prepare_request_uri(
-            get_config('mg_server') + '/oauth/authorize',
+            mg_config['server'] + '/oauth/authorize',
             redirect_uri='http://foo.example/')
 
-    print 'Go to {0}, then paste the "?code=$CODE" $CODE part.'.format(uri)
+    print 'Go to {0}, then paste the $CODE part in "?code=$CODE" below.'.format(uri)
     code = raw_input('code: ')
 
     token_uri = client.prepare_request_uri(
-            get_config('mg_server') + '/oauth/access_token',
+            mg_config['server'] + '/oauth/access_token',
             code=code)
 
     token_request = urlopen(token_uri)
@@ -29,36 +127,10 @@ def authorize():
 
     print 'Token data: {0}'.format(token_data)
 
-    set_config('access_token', token_data['access_token'])
+    mg_config['access_token'] = token_data['access_token']
+    config.write()
 
 
 def get_client():
-    client = WebApplicationClient(get_config('client_id'))
+    client = WebApplicationClient(mg_config['client_id'])
     return client
-
-
-def get_config(key, default=None):
-    conf = Config.query.filter(Config.key == unicode(key)).first()
-
-    if not conf and not default:
-        raise ValueError('{0} is not configured.'.format(key))
-    elif not conf:
-        return default
-    else:
-        return conf.value
-
-
-def set_config(key, value, checkfirst=False):
-    conf = Config.query.filter(Config.key == unicode(key)).first()
-
-    if checkfirst:
-        if conf:
-            raise NameError('{0} is already set in the configuration.'.format(key))
-
-    if conf:
-        conf.value = unicode(value)
-    else:
-        conf = Config(unicode(key), unicode(value))
-        session.add(conf)
-
-    session.commit()
