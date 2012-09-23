@@ -10,10 +10,10 @@ automgtic is an automatic media uploader for GNU MediaGoblin.
 
 automgtic authenticates to the GNU MediaGoblin server via `OAuth draft v2.25`_.
 
-automgtic uses a local database to keep track of the files where it stores:
+automgtic uses a local database where it stores:
 
-- An MD5 digest of the file to prevent multiple uploads of the same file due to
-  filesystem changes.
+- An MD5 digest of an uploaded file to prevent multiple uploads of the same
+  file due to filesystem changes.
 - The filename of the file when it was uploaded.
 - The metadata returned by the GNU MediaGoblin server when the file was posted.
 
