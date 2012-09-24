@@ -79,7 +79,7 @@ def upload_if_not_exist(path, digest):
             'file': open(path, 'rb'),
             'title': os.path.split(path)[-1],
             'description': '',
-            'license': '',
+            'license': app_config['license'],
             'tags': ''}
 
     datagen, headers = multipart_encode(fields)
