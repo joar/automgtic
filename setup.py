@@ -13,5 +13,6 @@ setup(
             'configobj',
             'sqlalchemy',
             'simplejson',
-            'poster'],
+            'poster',
+            'oauthlib'],
         license='Apache License v2')
