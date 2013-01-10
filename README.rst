@@ -38,7 +38,7 @@ directory containing the ``automgtic.ini`` file and run::
  Usage 
 -------
 
-Make sure to activate the following plugins on mediagoblin : 
+Make sure to activate the following plugins on mediagoblin :: 
 
   [plugins]
   [[mediagoblin.plugins.oauth]]
