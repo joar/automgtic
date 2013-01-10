@@ -38,17 +38,27 @@ directory containing the ``automgtic.ini`` file and run::
  Usage 
 -------
 
+Make sure to activate the following plugins on mediagoblin : 
+
+  [plugins]
+  [[mediagoblin.plugins.oauth]]
+  [[mediagoblin.plugins.api]]
+  [[mediagoblin.plugins.httpapiauth]]
+
+
 Once you have installed the dependencies, you need to have an OAuth client
 registered on the GNU MediaGoblin instance, you can register one at
 ``instance.example/oauth/client/register``.
+
+Name it what you want, type should be "Public", and Redirect URI should be "http://www.foo.example/".
 
 Once you have registered your OAuth client you need the client identifier in
 your config.
 
 .. warning::
-    Before you start editing your config, do ``cp automgtic.ini
-    automgtic_local.ini``, this to separate the version-controlled
-    ``automgtic.ini`` from your local settings.
+    Before you start editing your config, do 
+    ``cp automgtic.ini automgtic_local.ini``, this to separate the 
+    version-controlled ``automgtic.ini`` from your local settings.
 
 When the ``client_id`` is set, run ``./run.py --authorize``, then follow the
 instructions provided. This will update your ``.ini`` with the ``access_token``
