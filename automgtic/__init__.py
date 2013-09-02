@@ -7,7 +7,7 @@ from urllib2 import urlopen, Request
 
 from poster.streaminghttp import register_openers
 from poster.encode import multipart_encode
-from oauthlib.oauth2.draft25 import WebApplicationClient
+from oauthlib.oauth2 import WebApplicationClient
 from configobj import ConfigObj
 from validate import Validator
 
