@@ -48,7 +48,7 @@ Make sure to activate the following plugins on mediagoblin ::
 
 Once you have installed the dependencies, you need to have an OAuth client
 registered on the GNU MediaGoblin instance, you can register one at
-``instance.example/oauth/client/register``.
+``instance.example/oauth2/client/register``.
 
 Name it what you want, type should be "Public", and Redirect URI should be "http://www.foo.example/".
 
