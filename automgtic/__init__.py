@@ -130,14 +130,14 @@ def digest_file(f, block_size=2 ** 20):
 def authorize():
     client = get_client()
     uri = client.prepare_request_uri(
-            mg_config['server'] + '/oauth/authorize',
+            mg_config['server'] + '/oauth-2/authorize',
             redirect_uri='http://foo.example/')
 
     print 'Go to {0}, then paste the $CODE part in "?code=$CODE" below.'.format(uri)
     code = raw_input('code: ')
 
     token_uri = client.prepare_request_uri(
-            mg_config['server'] + '/oauth/access_token',
+            mg_config['server'] + '/oauth-2/access_token',
             code=code)
 
     token_request = urlopen(token_uri)
